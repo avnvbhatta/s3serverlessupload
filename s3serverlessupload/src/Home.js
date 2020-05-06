@@ -28,10 +28,12 @@ class Home extends React.Component{
       
 
       getSignedURL(this.state.selectedFile).then(data => {
-        axios
-          .put(data.data.urls[0], this.state.selectedFile[0], config)
-          .then(res => console.log("Upload Completed", res))
-          .catch(err => console.log("Upload Interrupted", err));
+          for(let i=0; i<data.data.urls.length; i++){
+              axios
+                .put(data.data.urls[i], this.state.selectedFile[i], config)
+                .then(res => console.log("Upload Completed", res))
+                .catch(err => console.log("Upload Interrupted", err));
+          }
       });
 
 
@@ -40,7 +42,7 @@ class Home extends React.Component{
     render(){
       return(
         <div>
-            <input type="file" onChange={this.fileChangedHandler} />
+            <input type="file" multiple onChange={this.fileChangedHandler} />
             <button onClick={this.uploadHandler}>Upload!</button>
         </div>
     )
@@ -48,15 +50,16 @@ class Home extends React.Component{
     
 }
 
-const getSignedURL = (file) => {
-    console.log()
-    let fileName = file[0].name;
+const getSignedURL = (files) => {
+    let myFiles = []
+    let myarray = Array.from(files)
+    myarray.map(item=>{myFiles.push(item.name)})
     return new Promise((resolve, reject) => {
       axios
         .get("http://localhost:3001/get-signed-url", 
             {
               params: {
-                fileName: fileName
+                files: myFiles
               }
             }
         )

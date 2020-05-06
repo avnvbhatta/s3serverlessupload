@@ -23,30 +23,32 @@ let params = {
     ContentType: "image/jpeg"
   };
 
-  app.get("/get-signed-url", (req, res) => {
-    const fileurls = [];
-    params.Key = req.query.fileName;
-    s3.getSignedUrl("putObject", params, function(err, url) {
-      if (err) {
-        console.log("Error getting presigned url from AWS S3");
-        res.json({
-          success: false,
-          message: "Pre-Signed URL error",
-          urls: fileurls
-        });
-      } else {
-        fileurls[0] = url;
-        console.log("Presigned URL: ", fileurls[0]);
-        res.json({
-          success: true,
-          message: "AWS SDK S3 Pre-signed urls generated successfully.",
-          urls: fileurls
-        });
-      }
+  app.get("/get-signed-url", async (req, res) => {
+    let fileurls = [];
+    const files = Array.from(req.query.files)
+    let success = null;
+    let message = null;
+    console.log(files)
+    await files.forEach(file=>{
+        params.Key = file;
+        const result =  s3.getSignedUrl("putObject", params, function(err, url) {
+            if (err) {
+                console.log("Error getting presigned url from AWS S3");
+                success = false;
+                message = "Pre-Signed URL error"
+            } else {
+                success = true;
+                message = "AWS SDK S3 Pre-signed urls generated successfully.";
+                fileurls.push(url)
+            }
+            });
+    })
+    res.send({
+        success: success,
+        message: message,
+        urls: fileurls
     });
   });
-
-
 
 
 app.get('/', (req, res) => res.send('Hello World! '))
